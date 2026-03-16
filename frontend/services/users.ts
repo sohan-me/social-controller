@@ -27,6 +27,15 @@ export const usersService = {
     await api.delete(`/users/${id}/`);
   },
 
+  /** Admin only: set a new password for a user. */
+  resetPassword: async (
+    userId: number,
+    payload: { new_password: string; new_password2: string }
+  ): Promise<{ detail: string }> => {
+    const { data } = await api.post(`/users/${userId}/reset-password/`, payload);
+    return data;
+  },
+
   getMe: async (): Promise<User> => {
     const { data } = await api.get('/users/me/');
     return data;

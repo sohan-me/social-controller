@@ -67,3 +67,14 @@ class MeUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email', 'full_name', 'phone_number', 'address', 'profile_image']
+
+
+class AdminResetPasswordSerializer(serializers.Serializer):
+    """Admin-only: set a new password for any user."""
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
+    new_password2 = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs.get('new_password2'):
+            raise serializers.ValidationError({'new_password2': 'Passwords do not match.'})
+        return attrs

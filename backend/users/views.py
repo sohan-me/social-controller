@@ -1,5 +1,7 @@
 from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
 from .serializers import (
@@ -8,6 +10,7 @@ from .serializers import (
     UserSerializer,
     UserUpdateSerializer,
     MeUpdateSerializer,
+    AdminResetPasswordSerializer,
 )
 from .permissions import IsAdminRole
 
@@ -69,3 +72,16 @@ class MeView(generics.RetrieveUpdateAPIView):
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update(request, *args, **kwargs)
+
+
+class AdminResetPasswordView(APIView):
+    """Admin-only: set a new password for the given user."""
+    permission_classes = [IsAdminRole]
+
+    def post(self, request, pk):
+        user = get_object_or_404(User.objects.all(), pk=pk)
+        serializer = AdminResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user.set_password(serializer.validated_data['new_password'])
+        user.save(update_fields=['password'])
+        return Response({'detail': 'Password has been reset.'}, status=status.HTTP_200_OK)

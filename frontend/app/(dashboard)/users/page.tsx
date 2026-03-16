@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { User } from '@/types';
-import { Plus, Pencil, PowerOff, Power, Trash2 } from 'lucide-react';
+import { Plus, Pencil, PowerOff, Power, Trash2, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 function RoleBadge({ role }: { role: string }) {
@@ -81,6 +81,75 @@ function EditUserDialog({ user, onClose }: { user: User; onClose: () => void }) 
   );
 }
 
+function ResetPasswordDialog({ user, onClose }: { user: User; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [newPassword, setNewPassword] = useState('');
+  const [newPassword2, setNewPassword2] = useState('');
+
+  const resetMutation = useMutation({
+    mutationFn: () => usersService.resetPassword(user.id, { new_password: newPassword, new_password2: newPassword2 }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Password reset successfully');
+      setNewPassword('');
+      setNewPassword2('');
+      onClose();
+    },
+    onError: (err: { response?: { data?: Record<string, string[]> } }) => {
+      const msg = err.response?.data?.new_password?.[0] ?? err.response?.data?.new_password2?.[0] ?? 'Failed to reset password';
+      toast.error(msg);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== newPassword2) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    if (!newPassword || newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+    resetMutation.mutate();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+      <div className="space-y-1.5">
+        <Label htmlFor="reset-new-password" className="text-sm font-medium text-slate-700">New password</Label>
+        <Input
+          id="reset-new-password"
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          className="h-9 bg-background border-input"
+          placeholder="Enter new password"
+          minLength={8}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="reset-new-password2" className="text-sm font-medium text-slate-700">Confirm new password</Label>
+        <Input
+          id="reset-new-password2"
+          type="password"
+          value={newPassword2}
+          onChange={(e) => setNewPassword2(e.target.value)}
+          className="h-9 bg-background border-input"
+          placeholder="Confirm new password"
+          minLength={8}
+        />
+      </div>
+      <div className="flex gap-2 pt-1">
+        <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+        <Button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white" disabled={resetMutation.isPending || !newPassword || !newPassword2}>
+          {resetMutation.isPending ? 'Resetting…' : 'Reset password'}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 function DeleteConfirmDialog({ label, onConfirm, onClose }: { label: string; onConfirm: () => void; onClose: () => void }) {
   return (
     <div className="space-y-4 mt-2">
@@ -99,6 +168,7 @@ function UserActions({ user }: { user: User }) {
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [resetPwOpen, setResetPwOpen] = useState(false);
 
   const toggleActiveMutation = useMutation({
     mutationFn: () => usersService.update(user.id, { is_active: !user.is_active }),
@@ -114,6 +184,17 @@ function UserActions({ user }: { user: User }) {
 
   return (
     <div className="flex items-center gap-1">
+      <Dialog open={resetPwOpen} onOpenChange={setResetPwOpen}>
+        <DialogTrigger asChild>
+          <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50" title="Reset password">
+            <KeyRound className="h-3.5 w-3.5" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Reset password — {user.username}</DialogTitle></DialogHeader>
+          <ResetPasswordDialog user={user} onClose={() => setResetPwOpen(false)} />
+        </DialogContent>
+      </Dialog>
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogTrigger asChild>
           <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" title="Edit">

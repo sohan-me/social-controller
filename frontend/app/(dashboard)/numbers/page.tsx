@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { PhoneNumber, PhoneNumberListEntry } from '@/types';
 import { Plus, Phone, ExternalLink, Pencil, Trash2, Mail, PhoneCall, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SocialLogo } from '@/components/icons/SocialLogos';
 
 // ─── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ function SharedNumberRow({ entry }: { entry: PhoneNumberListEntry }) {
                     s.status === 'rejected' && 'bg-red-50 border-red-100 text-red-600'
                   )}
                 >
+                  <SocialLogo platform={s.platform} size={16} />
                   <span className="capitalize">{s.platform}</span>
                   <StatusBadge status={s.status} />
                 </div>

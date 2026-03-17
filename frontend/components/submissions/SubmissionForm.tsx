@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { SocialLogo } from '@/components/icons/SocialLogos';
 
 interface SubmissionFormProps {
   phoneNumberId: number;
@@ -91,9 +92,8 @@ export function SubmissionForm({ phoneNumberId, phoneNumberDisplay, platform, on
     <>
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-          Submit{' '}
-          <span className={colorClass}>{platformName}</span>
-          {' '}Account
+          <SocialLogo platform={platform} size={22} />
+          Submit <span className={colorClass}>{platformName}</span> Account
         </DialogTitle>
         <p className="text-sm text-slate-500 mt-1">
           Number: <span className="font-medium text-slate-700">{phoneNumberDisplay}</span>

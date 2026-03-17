@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AccountSubmission, Platform } from '@/types';
 import { CheckCircle, XCircle, Eye, EyeOff, Copy, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SocialLogo } from '@/components/icons/SocialLogos';
 import { toast } from 'sonner';
 
 // ─── Per-platform labels ──────────────────────────────────────────────────────
@@ -42,7 +43,8 @@ function PlatformBadge({ platform }: { platform: string }) {
     imo: 'bg-blue-50 text-blue-600', instagram: 'bg-pink-50 text-pink-600',
   };
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold capitalize', styles[platform] ?? 'bg-slate-100 text-slate-500')}>
+    <span className={cn('inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold capitalize', styles[platform] ?? 'bg-slate-100 text-slate-500')}>
+      <SocialLogo platform={platform as 'gmail' | 'whatsapp' | 'imo' | 'instagram'} size={14} />
       {platform}
     </span>
   );

@@ -9,6 +9,7 @@ class PhoneNumber(models.Model):
         USED = 'used', 'Used'
 
     number = models.CharField(max_length=20, unique=True)
+    url = models.URLField(max_length=500, blank=True, null=True)
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

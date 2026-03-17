@@ -59,3 +59,41 @@ class PaymentTransaction(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.transaction_type} {self.amount_BDT} BDT"
+
+
+class WithdrawalRequest(models.Model):
+    """User requests withdrawal; admin approves or rejects."""
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        APPROVED = 'approved', 'Approved'
+        REJECTED = 'rejected', 'Rejected'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='withdrawal_requests',
+    )
+    amount_BDT = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    note = models.CharField(max_length=255, blank=True, default='')
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='reviewed_withdrawals',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Withdrawal Request'
+        verbose_name_plural = 'Withdrawal Requests'
+
+    def __str__(self):
+        return f"{self.user.username} — {self.amount_BDT} BDT ({self.status})"

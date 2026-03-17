@@ -98,7 +98,7 @@ function EditContactDialog({ contact, onClose }: { contact: AdminContact; onClos
   );
 }
 
-function DeleteConfirmDialog({ label, onConfirm, onClose }: { label: string; onConfirm: () => void; onClose: () => void }) {
+function DeleteConfirmDialog({ onConfirm, onClose }: { label: string; onConfirm: () => void; onClose: () => void }) {
   return (
     <div className="space-y-4 mt-2">
       <p className="text-sm text-slate-600">

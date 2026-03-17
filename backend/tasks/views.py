@@ -1,17 +1,11 @@
 from rest_framework import generics, permissions
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from users.permissions import IsAdminRole
 from .models import PhoneNumber
 from .serializers import (
     PhoneNumberSerializer,
-    PhoneNumberAssignSerializer,
+    PhoneNumberListSerializer,
     PhoneNumberWithSubmissionsSerializer,
 )
-
-User = get_user_model()
 
 
 class PhoneNumberListCreateView(generics.ListCreateAPIView):
@@ -30,25 +24,21 @@ class PhoneNumberRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView
         return self.update(request, *args, **kwargs)
 
 
-class PhoneNumberAssignView(APIView):
-    permission_classes = [IsAdminRole]
+class PhoneNumberListView(generics.ListAPIView):
+    """Returns all numbers with url and approved submissions per number (for users to pick one)."""
+    serializer_class = PhoneNumberListSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        serializer = PhoneNumberAssignSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        phone = get_object_or_404(PhoneNumber, pk=serializer.validated_data['phone_number_id'])
-        user = get_object_or_404(User, pk=serializer.validated_data['user_id'])
-
-        phone.assigned_to = user
-        phone.status = PhoneNumber.Status.ASSIGNED
-        phone.save()
-
-        return Response(PhoneNumberSerializer(phone).data)
+    def get_queryset(self):
+        return (
+            PhoneNumber.objects
+            .prefetch_related('submissions')
+            .all()
+        )
 
 
 class MyPhoneNumbersView(generics.ListAPIView):
-    """Returns the phone numbers assigned to the current user, with their submissions nested."""
+    """Returns the phone numbers assigned to the current user, with their submissions nested (legacy)."""
     serializer_class = PhoneNumberWithSubmissionsSerializer
     permission_classes = [permissions.IsAuthenticated]
 

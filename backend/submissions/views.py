@@ -13,7 +13,7 @@ class SubmissionCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save()
+        serializer.save(submitted_by=self.request.user)
 
 
 class SubmissionListView(generics.ListAPIView):
@@ -21,7 +21,7 @@ class SubmissionListView(generics.ListAPIView):
     permission_classes = [IsAdminRole]
 
     def get_queryset(self):
-        qs = AccountSubmission.objects.select_related('phone_number', 'reviewed_by').all()
+        qs = AccountSubmission.objects.select_related('phone_number', 'submitted_by', 'reviewed_by').all()
         status_filter = self.request.query_params.get('status')
         platform_filter = self.request.query_params.get('platform')
         if status_filter:
@@ -29,6 +29,20 @@ class SubmissionListView(generics.ListAPIView):
         if platform_filter:
             qs = qs.filter(platform=platform_filter)
         return qs
+
+
+class MySubmissionsView(generics.ListAPIView):
+    """Current user's submissions (for non-admin users to see their own)."""
+    serializer_class = AccountSubmissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            AccountSubmission.objects
+            .filter(submitted_by=self.request.user)
+            .select_related('phone_number', 'reviewed_by')
+            .order_by('-created_at')
+        )
 
 
 class SubmissionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -43,10 +57,10 @@ class SubmissionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView)
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'role') and user.role == 'admin':
-            return AccountSubmission.objects.select_related('phone_number', 'reviewed_by').all()
+            return AccountSubmission.objects.select_related('phone_number', 'submitted_by', 'reviewed_by').all()
         # Regular users can only update their own pending submissions
         return AccountSubmission.objects.filter(
-            phone_number__assigned_to=user,
+            submitted_by=user,
             status=AccountSubmission.Status.PENDING,
         )
 

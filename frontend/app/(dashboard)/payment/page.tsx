@@ -14,8 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Wallet, ArrowUpRight, Pencil, Trash2 } from 'lucide-react';
-import { PaymentTransaction } from '@/types';
+import { cn } from '@/lib/utils';
+import { Wallet, ArrowUpRight, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { PaymentTransaction, WithdrawalRequest } from '@/types';
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -41,7 +42,13 @@ export default function PaymentPage() {
     queryKey: ['wallet-transactions'],
     queryFn: () => walletService.listTransactions(),
   });
-  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData as { results?: PaymentTransaction[] })?.results ?? [];
+  const transactions = Array.isArray(transactionsData) ? transactionsData : (transactionsData as unknown as { results?: PaymentTransaction[] })?.results ?? [];
+
+  const { data: withdrawalsData, isLoading: withdrawalsLoading } = useQuery({
+    queryKey: ['wallet-withdrawals'],
+    queryFn: () => walletService.getWithdrawals(),
+  });
+  const withdrawals = Array.isArray(withdrawalsData) ? withdrawalsData : (withdrawalsData as unknown as { results?: WithdrawalRequest[] })?.results ?? [];
 
   const creditMutation = useMutation({
     mutationFn: () =>
@@ -88,6 +95,28 @@ export default function PaymentPage() {
   const [editAmount, setEditAmount] = useState('');
   const [editNote, setEditNote] = useState('');
   const [deleteTx, setDeleteTx] = useState<PaymentTransaction | null>(null);
+
+  const approveWithdrawalMutation = useMutation({
+    mutationFn: (id: number) => walletService.approveWithdrawal(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['wallet-withdrawals'] });
+      qc.invalidateQueries({ queryKey: ['wallet-transactions'] });
+      qc.invalidateQueries({ queryKey: ['wallet-me'] });
+      qc.invalidateQueries({ queryKey: ['wallet-withdrawals-me'] });
+      toast.success('Withdrawal approved');
+    },
+    onError: (err: { response?: { data?: { detail?: string } } }) => toast.error(err.response?.data?.detail || 'Failed to approve'),
+  });
+
+  const rejectWithdrawalMutation = useMutation({
+    mutationFn: (id: number) => walletService.rejectWithdrawal(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['wallet-withdrawals'] });
+      qc.invalidateQueries({ queryKey: ['wallet-withdrawals-me'] });
+      toast.success('Withdrawal rejected');
+    },
+    onError: () => toast.error('Failed to reject'),
+  });
 
   if (typeof isAdmin === 'boolean' && !isAdmin) {
     return null;
@@ -173,6 +202,87 @@ export default function PaymentPage() {
             {creditMutation.isPending ? 'Assigning…' : 'Assign to user'}
           </Button>
         </form>
+      </div>
+
+      <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border">
+          <p className="text-sm font-semibold text-foreground">Withdrawal requests</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Approve or reject user withdrawal requests</p>
+        </div>
+        <div className="overflow-x-auto">
+          {withdrawalsLoading ? (
+            <div className="p-4 space-y-2">
+              {[1, 2].map((i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : withdrawals.length === 0 ? (
+            <p className="p-5 text-sm text-muted-foreground text-center">No withdrawal requests.</p>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">User</th>
+                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">Amount (BDT)</th>
+                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">Note</th>
+                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">Status</th>
+                  <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">Date</th>
+                  <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {withdrawals.map((w) => (
+                  <tr key={w.id} className="border-b border-border hover:bg-muted/30">
+                    <td className="py-3 px-4 text-sm font-medium text-foreground">{w.user_username ?? `User #${w.user}`}</td>
+                    <td className="py-3 px-4 text-sm font-semibold text-foreground">{Number(w.amount_BDT).toLocaleString('en-BD', { minimumFractionDigits: 2 })}</td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{w.note || '—'}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={cn(
+                          'inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase',
+                          w.status === 'pending' && 'bg-amber-50 text-amber-600',
+                          w.status === 'approved' && 'bg-emerald-50 text-emerald-600',
+                          w.status === 'rejected' && 'bg-red-50 text-red-500'
+                        )}
+                      >
+                        {w.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(w.created_at).toLocaleString()}</td>
+                    <td className="py-3 px-4 text-right">
+                      {w.status === 'pending' && (
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                            disabled={approveWithdrawalMutation.isPending}
+                            onClick={() => approveWithdrawalMutation.mutate(w.id)}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                            disabled={rejectWithdrawalMutation.isPending}
+                            onClick={() => rejectWithdrawalMutation.mutate(w.id)}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       <div className="bg-card rounded-2xl border border-border shadow-card overflow-hidden">

@@ -1,5 +1,5 @@
 import api from './api';
-import { PhoneNumber, PhoneNumberWithSubmissions, PaginatedResponse } from '@/types';
+import { PhoneNumber, PhoneNumberWithSubmissions, PhoneNumberListEntry, PaginatedResponse } from '@/types';
 
 export const numbersService = {
   list: async (): Promise<PaginatedResponse<PhoneNumber>> => {
@@ -7,21 +7,19 @@ export const numbersService = {
     return data;
   },
 
+  /** All numbers with url and approved submissions (for users to pick one). */
+  getNumberList: async (): Promise<PhoneNumberListEntry[]> => {
+    const { data } = await api.get('/numbers/list/');
+    return data.results ?? data;
+  },
+
   myNumbers: async (): Promise<PhoneNumberWithSubmissions[]> => {
     const { data } = await api.get('/numbers/my/');
     return data.results ?? data;
   },
 
-  create: async (number: string): Promise<PhoneNumber> => {
-    const { data } = await api.post('/numbers/', { number });
-    return data;
-  },
-
-  assign: async (phoneNumberId: number, userId: number) => {
-    const { data } = await api.post('/numbers/assign/', {
-      phone_number_id: phoneNumberId,
-      user_id: userId,
-    });
+  create: async (payload: { number: string; url?: string }): Promise<PhoneNumber> => {
+    const { data } = await api.post('/numbers/', payload);
     return data;
   },
 

@@ -22,11 +22,19 @@ export interface AuthTokens {
 
 export type Platform = 'gmail' | 'whatsapp' | 'imo' | 'instagram';
 
+export interface SubmissionPlatformStatus {
+  id: number;
+  platform: Platform;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 export interface AccountSubmission {
   id: number;
   phone_number: number;
   phone_number_display: string;
   platform: Platform;
+  submitted_by?: number | null;
+  submitted_by_username?: string | null;
   username_or_email: string;
   password?: string;
   screenshot: string | null;
@@ -40,10 +48,19 @@ export interface AccountSubmission {
 export interface PhoneNumber {
   id: number;
   number: string;
-  assigned_to: number | null;
-  assigned_to_username: string | null;
-  status: 'available' | 'assigned' | 'used';
+  url?: string | null;
+  assigned_to?: number | null;
+  assigned_to_username?: string | null;
+  status?: 'available' | 'assigned' | 'used';
   created_at: string;
+}
+
+/** User-facing list entry: number + url + approved submissions per number */
+export interface PhoneNumberListEntry {
+  id: number;
+  number: string;
+  url: string | null;
+  submissions: SubmissionPlatformStatus[];
 }
 
 export interface PhoneNumberWithSubmissions extends PhoneNumber {
@@ -103,4 +120,25 @@ export interface PaymentTransaction {
 export interface MyWalletResponse {
   wallet: Wallet;
   transactions: PaymentTransaction[];
+}
+
+export interface Proxy {
+  id: number;
+  host: string;
+  port: number;
+  username: string;
+  created_at: string;
+}
+
+export interface WithdrawalRequest {
+  id: number;
+  user: number;
+  user_username?: string;
+  amount_BDT: string;
+  status: 'pending' | 'approved' | 'rejected';
+  note: string;
+  reviewed_by: number | null;
+  reviewed_by_username: string | null;
+  reviewed_at: string | null;
+  created_at: string;
 }

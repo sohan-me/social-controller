@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { SidebarContent } from './Sidebar';
-import { cn } from '@/lib/utils';
 
 export function Navbar() {
   const tokens = useAuthStore((s) => s.tokens);

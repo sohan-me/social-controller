@@ -17,6 +17,8 @@ import {
   Contact,
   Banknote,
   Wallet,
+  Server,
+  KeyRound,
 } from 'lucide-react';
 import { useLogout } from '@/hooks/useAuth';
 import { BRAND_NAME, LOGO_PATH } from '@/lib/site';
@@ -26,15 +28,17 @@ const adminNavItems = [
   { href: '/users',     label: 'Users',         icon: Users           },
   { href: '/numbers',   label: 'Phone Numbers', icon: Phone           },
   { href: '/submissions', label: 'Submissions', icon: FileCheck       },
+  { href: '/proxies',   label: 'Proxies',       icon: Server          },
   { href: '/payment',   label: 'Payment',       icon: Banknote        },
   { href: '/contacts', label: 'Admin Contacts', icon: Contact       },
   { href: '/profile', label: 'My Profile',          icon: UserCircle },
 ];
 
 const userNavItems = [
-  { href: '/numbers', label: 'Numbers & Accounts', icon: Phone      },
-  { href: '/wallet',  label: 'Wallet',              icon: Wallet     },
-  { href: '/profile', label: 'My Profile',          icon: UserCircle },
+  { href: '/numbers',  label: 'Phone Numbers', icon: Phone      },
+  { href: '/accounts', label: 'Accounts',      icon: KeyRound   },
+  { href: '/wallet',   label: 'Wallet',        icon: Wallet     },
+  { href: '/profile', label: 'My Profile',     icon: UserCircle },
 ];
 
 interface SidebarContentProps {

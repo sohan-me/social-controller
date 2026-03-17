@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Wallet, PaymentTransaction
+from .models import Wallet, PaymentTransaction, WithdrawalRequest
 
 User = get_user_model()
 
@@ -50,3 +50,24 @@ class PaymentTransactionUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentTransaction
         fields = ['amount_BDT', 'note']
+
+
+class WithdrawalRequestSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    reviewed_by_username = serializers.SerializerMethodField()
+
+    def get_reviewed_by_username(self, obj):
+        return obj.reviewed_by.username if obj.reviewed_by else None
+
+    class Meta:
+        model = WithdrawalRequest
+        fields = [
+            'id', 'user', 'user_username', 'amount_BDT', 'status',
+            'note', 'reviewed_by', 'reviewed_by_username', 'reviewed_at', 'created_at',
+        ]
+        read_only_fields = ['id', 'user', 'status', 'reviewed_by', 'reviewed_at', 'created_at']
+
+
+class WithdrawalCreateSerializer(serializers.Serializer):
+    amount_BDT = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0.01)
+    note = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')

@@ -17,7 +17,8 @@ export function useCreateSubmission() {
     mutationFn: (formData: FormData) => submissionsService.create(formData),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['submissions'] });
-      qc.invalidateQueries({ queryKey: ['my-numbers'] });
+      qc.invalidateQueries({ queryKey: ['submissions-mine'] });
+      qc.invalidateQueries({ queryKey: ['number-list'] });
       toast.success('Submission sent for review');
     },
     onError: () => toast.error('Failed to submit'),
@@ -30,6 +31,8 @@ export function useApproveSubmission() {
     mutationFn: (id: number) => submissionsService.approve(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['submissions'] });
+      qc.invalidateQueries({ queryKey: ['submissions-mine'] });
+      qc.invalidateQueries({ queryKey: ['number-list'] });
       qc.invalidateQueries({ queryKey: ['analytics'] });
       toast.success('Submission approved');
     },
@@ -43,6 +46,8 @@ export function useRejectSubmission() {
     mutationFn: (id: number) => submissionsService.reject(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['submissions'] });
+      qc.invalidateQueries({ queryKey: ['submissions-mine'] });
+      qc.invalidateQueries({ queryKey: ['number-list'] });
       qc.invalidateQueries({ queryKey: ['analytics'] });
       toast.success('Submission rejected');
     },
@@ -57,7 +62,8 @@ export function useUpdateSubmission() {
       submissionsService.update(id, formData),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['submissions'] });
-      qc.invalidateQueries({ queryKey: ['my-numbers'] });
+      qc.invalidateQueries({ queryKey: ['submissions-mine'] });
+      qc.invalidateQueries({ queryKey: ['number-list'] });
       toast.success('Submission updated');
     },
     onError: () => toast.error('Failed to update submission'),
@@ -70,7 +76,8 @@ export function useDeleteSubmission() {
     mutationFn: (id: number) => submissionsService.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['submissions'] });
-      qc.invalidateQueries({ queryKey: ['my-numbers'] });
+      qc.invalidateQueries({ queryKey: ['submissions-mine'] });
+      qc.invalidateQueries({ queryKey: ['number-list'] });
       qc.invalidateQueries({ queryKey: ['analytics'] });
       toast.success('Submission deleted');
     },

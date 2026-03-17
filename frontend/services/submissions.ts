@@ -7,6 +7,11 @@ export const submissionsService = {
     return data;
   },
 
+  mine: async (): Promise<AccountSubmission[]> => {
+    const { data } = await api.get('/submissions/mine/');
+    return data.results ?? data;
+  },
+
   create: async (formData: FormData): Promise<AccountSubmission> => {
     const { data } = await api.post('/submissions/create/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

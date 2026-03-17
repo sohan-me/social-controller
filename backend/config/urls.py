@@ -14,4 +14,5 @@ urlpatterns = [
     path('api/analytics/', include('analytics.urls')),
     path('api/contacts/', include('contacts.urls')),
     path('api/wallet/', include('wallet.urls')),
+    path('api/proxy/', include('proxy.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

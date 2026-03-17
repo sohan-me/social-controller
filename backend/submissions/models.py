@@ -19,6 +19,13 @@ class AccountSubmission(models.Model):
         on_delete=models.CASCADE,
         related_name='submissions',
     )
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='account_submissions',
+    )
     platform = models.CharField(max_length=20, choices=Platform.choices)
     username_or_email = models.CharField(max_length=255)
     password = models.CharField(max_length=255, blank=True, default='')
